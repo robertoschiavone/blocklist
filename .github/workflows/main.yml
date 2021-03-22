@@ -1,0 +1,29 @@
+name: Blocklist
+
+on:
+  schedule:
+    - cron: '1 0 * * *'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    name: Generate IP blocklist
+
+    steps:
+    - name: Checkout the repository
+      uses: actions/checkout@v2
+
+    - name: Run the script
+      uses: ./
+    
+    - name: Get current date
+      id: date
+      run: echo "::set-output name=today::$(date +'%Y-%m-%d')"
+
+    - name: Commit list
+      run: |
+        git config --global user.name "Roberto Schiavone"
+        git config --global user.email "robertoschiavone@users.noreply.github.com"
+        git add blocklist.p2p
+        git commit -m "chore: ${{ steps.date.outputs.today }} blocklist :recycle:" -m "generated"
+        git push origin master
