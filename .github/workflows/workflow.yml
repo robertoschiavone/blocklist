@@ -1,0 +1,73 @@
+name: blocklist.p2p
+
+on:
+  schedule:
+    - cron: '0 0 * * *'
+
+jobs:
+  build:
+    name: Generate IP blocklist
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout the main branch
+      uses: actions/checkout@v3
+
+    - name: Run the script
+      uses: ./.github/actions/docker
+    
+    - name: Get current date
+      id: date
+      run: echo "today=$(date +'%Y-%m-%d')" >> $GITHUB_OUTPUT
+
+    - name: Import GPG key
+      uses: crazy-max/ghaction-import-gpg@v5
+      with:
+        git_committer_name: "Roberto Schiavone"
+        git_committer_email: "hello@robertoschiavone.io"
+        git_user_signingkey: true
+        git_commit_gpgsign: true
+        gpg_private_key: ${{ secrets.GPG_PRIVATE_KEY }}
+        passphrase: ${{ secrets.PASSPHRASE }}
+
+    - name: Commit, push, tag
+      run: |
+        git checkout --orphan release
+        git rm --cached $(git ls-files)
+        git add blocklist.p2p
+        git commit -S -m "chore: ${{ steps.date.outputs.today }} build :bookmark:"
+        git push -f origin release
+        git tag "${{ steps.date.outputs.today }}"
+        git tag latest
+        git push -f origin "${{ steps.date.outputs.today }}"
+        git push -f origin latest
+
+    - name: Checkout the release branch
+      uses: actions/checkout@v3
+      with:
+        ref: "release"
+
+    - name: Upload binaries to release
+      uses: svenstaro/upload-release-action@v2
+      with:
+        repo_token: ${{ secrets.GITHUB_TOKEN }}
+        file: blocklist.p2p
+        asset_name: blocklist.p2p
+        tag: "${{ steps.date.outputs.today }}"
+        overwrite: true
+
+    - name: Upload binaries to release
+      uses: svenstaro/upload-release-action@v2
+      with:
+        repo_token: ${{ secrets.GITHUB_TOKEN }}
+        file: blocklist.p2p
+        asset_name: blocklist.p2p
+        tag: latest
+        overwrite: true
+
+    - name: Cleanup
+      run: |
+        git checkout -f main
+        git branch -D release
+        git push origin :release
+
