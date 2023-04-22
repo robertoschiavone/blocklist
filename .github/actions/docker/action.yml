@@ -1,0 +1,8 @@
+name: "Action"
+author: "Roberto Schiavone <robertoschiavone@users.noreply.github.com>"
+description: "This basic action runs the docker image"
+
+runs:
+  using: "docker"
+  image: "../../../Dockerfile"
+
