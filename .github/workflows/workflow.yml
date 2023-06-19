@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout the master branch
+    - name: Checkout the main branch
       uses: actions/checkout@v3
 
     - name: Run the script
@@ -67,7 +67,7 @@ jobs:
 
     - name: Cleanup
       run: |
-        git checkout -f master
+        git checkout -f main
         git branch -D release
         git push origin :release
 
